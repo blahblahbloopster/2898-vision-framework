@@ -1,5 +1,7 @@
 import numpy as np
 
+# Do not modify unless it breaks
+
 
 class EasyContour:
 
