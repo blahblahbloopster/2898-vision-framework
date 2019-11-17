@@ -1,0 +1,11 @@
+How this framework works:
+There is a multistage pipeline that has 4 stages: Getting the image, processing the image,
+and filtering/solving
+The reason for the pipeline is so that it can entirely utilize multiple CPU cores, very
+important when working on a pi.
+The getting the image stage and part of the other two stages are done for you.
+What you need to do is get some test footage, make a system for filtering out other contours,
+and corner identification.  You also need to fill in the real-world dimensions of the target.
+
+How to do that:
+Getting some test footage is relatively straightforward, just
