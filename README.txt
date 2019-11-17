@@ -12,12 +12,14 @@ EasyContour - a class I made that makes contour handling a lot easier.  You init
 a contour in any format, and then you can tell it to format it in the standard opencv way or
 any other way using the format method.
 
+array - a numpy array, usually has a specific datatype specified by np.array([blah], dtype=np.)
+
 How this framework works:
 There is a multistage pipeline that has 4 stages: Getting the image, processing the image,
 and filtering/solving
 The reason for the pipeline is so that it can entirely utilize multiple CPU cores, very
 important when working on a pi.
-The getting the image stage and part of the other two stages are done for you.
+You just need to modify the last stage, filtering/solving.
 What you need to do is get some test footage, make a system for filtering out other contours,
 and corner identification.  You also need to fill in the real-world dimensions of the target,
 as well as calibrate the camera.
