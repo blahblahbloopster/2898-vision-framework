@@ -1,3 +1,12 @@
+
+     _   _    _____  _        _     _____    _____
+    | |_| |  |  _  | \\  /\  //    |_   _|  |  _  |
+    |  _  |  | |_| |  \\//\\//       | |    | |_| |
+    |_| |_|  |_____|   \/  \/        |_|    |_____|
+
+tl;dr:
+Too bad, read it anyways
+
 Vocabulary in opencv and this document:
 contour - specially formatted list of points, precisely how it must be formatted depends on
 the state of the moon for all I know

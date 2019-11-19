@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import math
 import numpy as np
@@ -7,12 +9,12 @@ from EasyContour import EasyContour
 
 # If this is true, it will run the pipeline, getting full performance, but you won't be able
 # to have display output.
-PIPELINE = False
+PIPELINE = True
 # This can be a port number if it's an actual camera, or a video file
 CAMERA_ID = "camera1_feed.mkv"
 # This changes if it will display some debug windows
-DISPLAY = True
-RGB_BOUNDS = (np.array([0, 100, 0]), np.array([100, 255, 100]))
+DISPLAY = False
+RGB_BOUNDS = (np.array([0, 100, 0]), np.array([200, 255, 200]))
 MATRIX = None
 DISTORTION = None
 TARGET_DIMENSIONS = EasyContour(((1, 2), (3, 4), (5, 6), (7, 8)))
@@ -23,6 +25,20 @@ else:
     import multiprocessing.dummy as multiprocessing
 cap = None
 img_org = None
+STOP = -1
+times_dict = {}
+times_record = {}
+
+
+def time_it(name, starting=True):
+    if starting:
+        times_dict[name] = time.monotonic()
+    else:
+        if name in times_record:
+            times_record[name]["total"] += time.monotonic() - times_dict[name]
+        else:
+            times_record[name] = {"total": time.monotonic() - times_dict[name],
+                                  "calls": 1}
 
 
 def compute_output_values(rotation_vec, translation_vec):
@@ -54,13 +70,15 @@ def compute_output_values(rotation_vec, translation_vec):
 
 def get_video(inp):
     global img_org
-    if inp == "stop":
-        return "stop"
+    if inp is STOP:
+        return STOP
     elif inp is None:
         return None
+    time_it("read")
     ret, frame = cap.read()
+    time_it("read", False)
     if not ret:
-        return "stop"
+        return STOP
     if not PIPELINE:
         if DISPLAY:
             cv2.imshow("Original image", frame)
@@ -73,36 +91,44 @@ def get_video(inp):
 
 
 def process_frame(inp):
-    if inp == "stop":
-        return "stop"
+    if inp is STOP:
+        return STOP
     elif inp is None:
         return None
+    time_it("thresh")
     frame = cv2.inRange(inp, RGB_BOUNDS[0], RGB_BOUNDS[1])
+    time_it("thresh", False)
     if not PIPELINE:
         if DISPLAY:
             cv2.imshow("In range", frame)
     # Change RETER_EXTERNAL to RETER_TREE if you are getting spotty detection
+    time_it("contours")
     contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[1]
+    time_it("contours", False)
     if not PIPELINE:
         if DISPLAY:
             cv2.drawContours(img_org, contours, -1, (255, 0, 0), 3)
             cv2.imshow("Contours", img_org)
+    time_it("easy")
     easy_contours = []
     for cnt in contours:
         if len(cnt) > 5:
             easy_contours.append(EasyContour(cnt))
+    time_it("easy", False)
     return contours
 
 
 def filtering_and_solving(inp):
-    if inp == "stop":
-        return "stop"
+    if inp is STOP:
+        return STOP
     elif inp is None:
         return None
     # This is where you put your code.  Inp is a list of EasyContour objects.
+    time_it("solvepnp")
     corners = EasyContour(((1, 2), (3, 4), (5, 6), (7, 8)))
     solvepnp_formatted = corners.format([["x", "y"], ["x", "y"]], np.float32)
+    time_it("solvepnp", False)
     # got_output, rotation_vector, translation_vector = cv2.solvePnP(TARGET_DIMENSIONS, solvepnp_formatted,
     #                                                                MATRIX, DISTORTION)
     # if not got_output:
@@ -113,29 +139,56 @@ def filtering_and_solving(inp):
     return None
 
 
-def work_function(input_queue, output_queue, function, camera=False):
+def work_function(input_queue, output_queue, function, times_queue, camera=False):
     if camera:
         global cap
         cap = cv2.VideoCapture(CAMERA_ID)
     while True:
         returned = function(input_queue.get())
-        if returned == "stop":
+        if returned is STOP:
             print("%s thread exiting" % function)
+            output_queue.put(STOP)
+            times_queue.put(times_record)
             exit()
         output_queue.put(returned)
 
 
 if __name__ == '__main__':
+    times_q = multiprocessing.Queue()
     queues = [multiprocessing.Queue(), multiprocessing.Queue(), multiprocessing.Queue(), multiprocessing.Queue()]
-    processes = [multiprocessing.Process(target=work_function, args=(queues[0], queues[1], get_video, True)),
-                 multiprocessing.Process(target=work_function, args=(queues[1], queues[2], process_frame)),
-                 multiprocessing.Process(target=work_function, args=(queues[2], queues[3], filtering_and_solving))]
-    for i in range(3):
+    processes = [multiprocessing.Process(
+        target=work_function, args=(queues[0], queues[1], get_video, times_q, True)),
+                 multiprocessing.Process(
+                     target=work_function, args=(queues[1], queues[2], process_frame, times_q)),
+                 multiprocessing.Process(
+                     target=work_function, args=(queues[2], queues[3], filtering_and_solving, times_q))]
+    for i in range(5):
         queues[0].put(None)
     for p in processes:
         p.start()
+    reps = 0
+    start = time.time()
+    begin = time.time()
     while True:
+        reps += 1
+        if reps >= 100:
+            elapsed = time.time() - start
+            print("Avg FPS: %s, avg time per frame: %s" % (reps / elapsed, elapsed / reps))
+            reps = 0
+            start = time.time()
         queues[0].put(0)
         gotten = queues[-1].get()
-        if gotten == "stop":
-            exit()
+        if gotten is STOP:
+            break
+        if DISPLAY:
+            if cv2.waitKey(5) & 0xFF == ord("q"):
+                break
+    total_time = time.time() - begin
+    time.sleep(0.1)
+    all_times = {}
+    while times_q.qsize() > 0:
+        all_times.update(times_q.get())
+    sorted_times = sorted(all_times.items(), key=lambda x: x[1]["total"], reverse=True)
+    for i in sorted_times:
+        print(str(i[0]).ljust(25, " ") + str(i[1]["total"]))
+    # print(all_times.values())
