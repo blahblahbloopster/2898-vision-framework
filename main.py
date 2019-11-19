@@ -87,7 +87,20 @@ def get_video(inp):
     if not PIPELINE:
         if DISPLAY:
             img_org = frame.copy()
-    return frame
+    time_it("thresh")
+    frame = cv2.inRange(frame, RGB_BOUNDS[0], RGB_BOUNDS[1])
+    time_it("thresh", False)
+    time_it("contours")
+    contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[1]
+    time_it("contours", False)
+    time_it("easy")
+    easy_contours = []
+    for cnt in contours:
+        if len(cnt) > 5:
+            easy_contours.append(EasyContour(cnt))
+    time_it("easy", False)
+    return easy_contours
 
 
 def process_frame(inp):
@@ -95,28 +108,28 @@ def process_frame(inp):
         return STOP
     elif inp is None:
         return None
-    time_it("thresh")
-    frame = cv2.inRange(inp, RGB_BOUNDS[0], RGB_BOUNDS[1])
-    time_it("thresh", False)
-    if not PIPELINE:
-        if DISPLAY:
-            cv2.imshow("In range", frame)
-    # Change RETER_EXTERNAL to RETER_TREE if you are getting spotty detection
-    time_it("contours")
-    contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = contours[1]
-    time_it("contours", False)
-    if not PIPELINE:
-        if DISPLAY:
-            cv2.drawContours(img_org, contours, -1, (255, 0, 0), 3)
-            cv2.imshow("Contours", img_org)
-    time_it("easy")
-    easy_contours = []
-    for cnt in contours:
-        if len(cnt) > 5:
-            easy_contours.append(EasyContour(cnt))
-    time_it("easy", False)
-    return contours
+    # time_it("thresh")
+    # frame = cv2.inRange(inp, RGB_BOUNDS[0], RGB_BOUNDS[1])
+    # time_it("thresh", False)
+    # if not PIPELINE:
+    #     if DISPLAY:
+    #         cv2.imshow("In range", frame)
+    # # Change RETER_EXTERNAL to RETER_TREE if you are getting spotty detection
+    # time_it("contours")
+    # contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # contours = contours[1]
+    # time_it("contours", False)
+    # if not PIPELINE:
+    #     if DISPLAY:
+    #         cv2.drawContours(img_org, contours, -1, (255, 0, 0), 3)
+    #         cv2.imshow("Contours", img_org)
+    # time_it("easy")
+    # easy_contours = []
+    # for cnt in contours:
+    #     if len(cnt) > 5:
+    #         easy_contours.append(EasyContour(cnt))
+    # time_it("easy", False)
+    return inp
 
 
 def filtering_and_solving(inp):
@@ -189,6 +202,8 @@ if __name__ == '__main__':
     while times_q.qsize() > 0:
         all_times.update(times_q.get())
     sorted_times = sorted(all_times.items(), key=lambda x: x[1]["total"], reverse=True)
+    print("Total time: %s" % total_time)
+    print("Time tracked: %s" % (sum(map(lambda x: x[1]["total"], sorted_times)) / total_time * 100), end="%\n")
     for i in sorted_times:
         print(str(i[0]).ljust(25, " ") + str(i[1]["total"]))
     # print(all_times.values())

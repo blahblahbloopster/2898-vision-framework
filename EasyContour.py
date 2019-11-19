@@ -1,6 +1,7 @@
 import numpy as np
 
-# Do not modify unless it breaks
+# Do not modify unless it breaks or you're having big performance issues with it.  Keep in
+# mind that the format method is expensive, but handy.
 
 
 class EasyContour:
@@ -12,7 +13,7 @@ class EasyContour:
             new.append([p[0], p[1]])
         new = np.array(new, dtype=np.int)
         self.cnt_internal = new
-        self.standard = self.format([[["x", "y"]], [["x", "y"]]], data_type=np.int32)
+        # self.standard = self.format([[["x", "y"]], [["x", "y"]]], data_type=np.int32)
         self.last_updated = self.cnt_internal
 
     def __str__(self):
