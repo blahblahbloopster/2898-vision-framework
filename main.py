@@ -7,7 +7,7 @@ import math
 import numpy as np
 from EasyContour import EasyContour
 
-# Read the README.txt before trying to use this file, it will make your life a lot easier
+# Read the README.md before trying to use this file, it will make your life a lot easier
 
 # If this is true, it will run the pipeline, getting full performance, but you won't be able
 # to have display output.
