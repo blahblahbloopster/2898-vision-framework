@@ -2,20 +2,21 @@
 right in an editor, you have to push it and look at it in gitlab.  I'm
 using pycharm with the markdown plugin, it does't look right in the MD
 preview, but it does in the text editor area.-->
-# How To Use
+# How To Use This Framework
 
 ##### tl;dr:
 Too bad, read it anyways
 
 ##### Vocabulary in opencv and this document:
 **contour** - specially formatted list of points, precisely how it must be formatted depends on
-the state of the moon for all I know
+the use case (i.e. objectpoints for solvepnp has an x, y, and z dimension with 32 bit floating
+ point)
 
-**solvepnp** - a function that finds your perspective from the target screen coordinates and it's
-real-world dimensions
+**solvepnp** - a function that finds your perspective from the target screen coordinates and 
+it's real-world dimensions
 
-**distortion** / camera matrix - distortion is kinda how the view is lensed, and the camera matrix
-describes this distortion and lets you correct for it
+**distortion / camera matrix** - distortion mathematically describes how the view is warped,
+and the camera matrix describes this distortion and lets you correct for it
 
 **EasyContour** - a class I made that makes contour handling a lot easier.  You initialize it with
 a contour in any format, and then you can tell it to format it in the standard opencv way or
@@ -23,7 +24,7 @@ any other way using the format method.
 
 **array** - a numpy array, usually has a specific datatype specified by
 ```
-np.array(list, dtype=np.blah)
+np.array(list, dtype=np.datatype_goes_here)
 ```
 #### How this framework works:
 There is a multistage pipeline that has 4 stages: Getting the image, processing the image,
@@ -75,13 +76,13 @@ then rotate the corner points back, but this is both computationally expensive a
 Contour filtering prevents your code from looking at a person in the stands and recognizing
 them as a target.  How you should do this is loop over your list of contours and add them
 to a new list (or not) based on some criteria.  These criteria can include:
-size
-aspect ratio
-position
-number of points
-area
-perimeter
-area/perimeter ratio
+- Size
+- Aspect ratio
+- Position
+- Number of points
+- Area
+- Perimeter
+- Area/perimeter ratio
 and so on.  These are also important for when your robot sees multiple targets at once.
 
 Contour pairing is for when the game has targets in pairs, like the 2019 season:
@@ -99,16 +100,16 @@ For example, if the robot saw this, it would do the following:
         /*/     \*\              /*/
        /_/       \_\            /_/
 
-1. find closest
+1. Find closest
 <!-- language: lang-none -->
      /*/---->\*\<-------------/*/
     /_/<------\_\            /_/
 
-2. check if they match
+2. Check if they match
 <!-- language: lang-none -->
-     /*/---->\*\<-------------/*/
-    /_/<------\_\            /_/
-       matches          doesn't match
-   (goes both ways)   (only goes one way)
+      /*/---->\*\<-------------/*/
+     /_/<------\_\            /_/
+        matches          doesn't match
+    (goes both ways)   (only goes one way)
 
 The paired ones would be stored together, and the extraneous contour would be removed.

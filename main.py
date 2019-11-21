@@ -1,6 +1,4 @@
-import logging
 import time
-
 import cv2
 import sys
 import math
@@ -11,7 +9,7 @@ from EasyContour import EasyContour
 
 # If this is true, it will run the pipeline, getting full performance, but you won't be able
 # to have display output.
-PIPELINE = False
+PIPELINE = True
 # This can be a port number if it's an actual camera, or a video file
 CAMERA_ID = "camera1_feed.mp4"
 # This changes if it will display some debug windows
@@ -26,7 +24,7 @@ if "--benchmark" in sys.argv:
     assert type(CAMERA_ID) is str
     DISPLAY = False
     PIPELINE = True
-    loops = 5
+    loops = 10
 else:
     loops = 0
 
