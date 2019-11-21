@@ -25,6 +25,9 @@ if "--benchmark" in sys.argv:
     DISPLAY = False
     # PIPELINE = False
     loops = 20
+else:
+    loops = 0
+
 if PIPELINE:
     import multiprocessing
 else:
@@ -34,7 +37,6 @@ img_org = None
 STOP = -1
 times_dict = {}
 times_record = {}
-loops = 0
 frame_count = 0
 
 

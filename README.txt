@@ -20,7 +20,8 @@ EasyContour - a class I made that makes contour handling a lot easier.  You init
 a contour in any format, and then you can tell it to format it in the standard opencv way or
 any other way using the format method.
 
-array - a numpy array, usually has a specific datatype specified by np.array([blah], dtype=np.)
+array - a numpy array, usually has a specific datatype specified by
+np.array([blah], dtype=np.blah)
 
 How this framework works:
 There is a multistage pipeline that has 4 stages: Getting the image, processing the image,
@@ -30,7 +31,13 @@ important when working on a pi.
 You just need to modify the last stage, filtering/solving.
 What you need to do is get some test footage, make a system for filtering out other contours,
 and corner identification.  You also need to fill in the real-world dimensions of the target,
-as well as calibrate the camera.
+as well as calibrate the camera.  Finally, you will want to benchmark it ON YOUR TARGET SYSTEM.
+You do this by running it like so:
+python3 main.py --benchmark
+It will loop the input video 20 times. (currently only recordings are supported for benchmarking)
+Different systems have different CPUs, GPUs (can affect results when opencv is compiled
+for CUDA), and RAM.  Benchmarking it on your computer and optimizing there is a good idea,
+but make sure to check it on your target platform.
 
 How to do that:
 Getting some test footage is relatively straightforward, just make a target and film it.
