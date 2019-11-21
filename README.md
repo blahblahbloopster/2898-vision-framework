@@ -1,3 +1,7 @@
+<!--This is gitlab-flavored markdown, so the ascii art won't render 
+right in an editor, you have to push it and look at it in gitlab.  I'm
+using pycharm with the markdown plugin, it does't look right in the MD
+preview, but it does in the text editor area.-->
 # How To Use
 
 ##### tl;dr:

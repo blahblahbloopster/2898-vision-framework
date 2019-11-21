@@ -13,7 +13,7 @@ from EasyContour import EasyContour
 # to have display output.
 PIPELINE = False
 # This can be a port number if it's an actual camera, or a video file
-CAMERA_ID = "camera1_feed.mkv"
+CAMERA_ID = "camera1_feed.mp4"
 # This changes if it will display some debug windows
 DISPLAY = False
 RGB_BOUNDS = (np.array([0, 100, 0]), np.array([200, 255, 200]))
