@@ -94,13 +94,12 @@ Contour pairing is for when the game has targets in pairs, like the 2019 season:
 Now there's two targets you have to keep track of!  How I did this for 2019 is I had a list
 of all the contours.  It would go through, and find the closest contour to each one.  Then,
 it would go through those, and find if they matched.
-if the robot saw this, it would do the following:
+For example, if the robot saw this, it would do the following:
 <!-- language: lang-none -->
         /*/     \*\              /*/
        /_/       \_\            /_/
 
 1. find closest
-
 <!-- language: lang-none -->
      /*/---->\*\<-------------/*/
     /_/<------\_\            /_/

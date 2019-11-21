@@ -22,9 +22,11 @@ DISTORTION = None
 TARGET_DIMENSIONS = EasyContour(((1, 2), (3, 4), (5, 6), (7, 8)))
 TARGET_DIMENSIONS = TARGET_DIMENSIONS.format([["x", "y", 0], ["x", "y", 0]], np.float32)
 if "--benchmark" in sys.argv:
+    # Make sure that they are using a recording for benchmarking
+    assert type(CAMERA_ID) is str
     DISPLAY = False
-    # PIPELINE = False
-    loops = 20
+    PIPELINE = True
+    loops = 5
 else:
     loops = 0
 
@@ -41,6 +43,15 @@ frame_count = 0
 
 
 def time_it(name, starting=True):
+    # This is a debugging/tracing function.  You use it by putting it around some code you
+    # want to time, like this:
+    """
+    time_it("solvepnp")
+    foo = cv2.solvepnp(arguments blah blah)
+    time_it("solvepnp", False)
+    """
+    # The function will measure the amount of time between the calls and record it.  Processes
+    # will send it back to the main process which will report it.
     if starting:
         times_dict[name] = time.monotonic()
     else:
@@ -187,6 +198,7 @@ def work_function(input_queue, output_queue, function, times_queue, camera=False
 
 
 if __name__ == '__main__':
+    total_frames = 0
     times_q = multiprocessing.Queue()
     queues = [multiprocessing.Queue(), multiprocessing.Queue(), multiprocessing.Queue(), multiprocessing.Queue()]
     processes = [multiprocessing.Process(
@@ -209,6 +221,7 @@ if __name__ == '__main__':
             print("Avg FPS: %s, avg time per frame: %s" % (reps / elapsed, elapsed / reps))
             reps = 0
             start = time.time()
+        total_frames += 1
         queues[0].put(0)
         gotten = queues[-1].get()
         if gotten is STOP:
@@ -226,4 +239,5 @@ if __name__ == '__main__':
     print("Time tracked: %s" % (sum(map(lambda x: x[1]["total"], sorted_times)) / total_time * 100), end="%\n")
     for i in sorted_times:
         print(str(i[0]).ljust(25, " ") + str(i[1]["total"]))
-    # print(all_times.values())
+    print()
+    print("Avg fps: %s avg time per frame: %s" % (total_frames / total_time, total_time / total_frames))
