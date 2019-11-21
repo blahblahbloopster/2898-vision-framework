@@ -1,6 +1,8 @@
+import logging
 import time
 
 import cv2
+import sys
 import math
 import numpy as np
 from EasyContour import EasyContour
@@ -9,7 +11,7 @@ from EasyContour import EasyContour
 
 # If this is true, it will run the pipeline, getting full performance, but you won't be able
 # to have display output.
-PIPELINE = True
+PIPELINE = False
 # This can be a port number if it's an actual camera, or a video file
 CAMERA_ID = "camera1_feed.mkv"
 # This changes if it will display some debug windows
@@ -19,6 +21,10 @@ MATRIX = None
 DISTORTION = None
 TARGET_DIMENSIONS = EasyContour(((1, 2), (3, 4), (5, 6), (7, 8)))
 TARGET_DIMENSIONS = TARGET_DIMENSIONS.format([["x", "y", 0], ["x", "y", 0]], np.float32)
+if "--benchmark" in sys.argv:
+    DISPLAY = False
+    # PIPELINE = False
+    loops = 20
 if PIPELINE:
     import multiprocessing
 else:
@@ -28,6 +34,8 @@ img_org = None
 STOP = -1
 times_dict = {}
 times_record = {}
+loops = 0
+frame_count = 0
 
 
 def time_it(name, starting=True):
@@ -70,6 +78,9 @@ def compute_output_values(rotation_vec, translation_vec):
 
 def get_video(inp):
     global img_org
+    global loops
+    global cap
+    global frame_count
     if inp is STOP:
         return STOP
     elif inp is None:
@@ -77,30 +88,40 @@ def get_video(inp):
     time_it("read")
     ret, frame = cap.read()
     time_it("read", False)
+    # print(cap)
+    frame_count += 1
+    # if frame_count >= cap.get(cv2.CAP_PROP_FRAME_COUNT) and loops > 0:
+    if (not ret) and loops > 0:
+        loops -= 1
+        print("Looping... (%s loops left)" % loops)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        frame_count = 0
+        ret, frame = cap.read()
     if not ret:
         return STOP
+    # if not ret:
+    #     if loops > 0:
+    #         loops -= 1
+    #         # del cap
+    #         # cap = None
+    #         # cap.release()
+    #         # cap2 = cv2.VideoCapture(CAMERA_ID)
+    #         # cap.set(cv2.CAP_PROP_POS_FRAMES, 1)
+    #         print("Looping")
+    #         # cap.open(CAMERA_ID)
+    #         # ret, frame = cap2.read()
+    #     else:
+    #         return STOP
     if not PIPELINE:
         if DISPLAY:
             cv2.imshow("Original image", frame)
-    # Note: it may be better to do image processing here so that you won't have to wait
-    # for memory transfer between processes
     if not PIPELINE:
         if DISPLAY:
             img_org = frame.copy()
     time_it("thresh")
     frame = cv2.inRange(frame, RGB_BOUNDS[0], RGB_BOUNDS[1])
     time_it("thresh", False)
-    time_it("contours")
-    contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = contours[1]
-    time_it("contours", False)
-    time_it("easy")
-    easy_contours = []
-    for cnt in contours:
-        if len(cnt) > 5:
-            easy_contours.append(EasyContour(cnt))
-    time_it("easy", False)
-    return easy_contours
+    return frame
 
 
 def process_frame(inp):
@@ -108,28 +129,25 @@ def process_frame(inp):
         return STOP
     elif inp is None:
         return None
-    # time_it("thresh")
-    # frame = cv2.inRange(inp, RGB_BOUNDS[0], RGB_BOUNDS[1])
-    # time_it("thresh", False)
-    # if not PIPELINE:
-    #     if DISPLAY:
-    #         cv2.imshow("In range", frame)
-    # # Change RETER_EXTERNAL to RETER_TREE if you are getting spotty detection
-    # time_it("contours")
-    # contours = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = contours[1]
-    # time_it("contours", False)
-    # if not PIPELINE:
-    #     if DISPLAY:
-    #         cv2.drawContours(img_org, contours, -1, (255, 0, 0), 3)
-    #         cv2.imshow("Contours", img_org)
-    # time_it("easy")
-    # easy_contours = []
-    # for cnt in contours:
-    #     if len(cnt) > 5:
-    #         easy_contours.append(EasyContour(cnt))
-    # time_it("easy", False)
-    return inp
+    if not PIPELINE:
+        if DISPLAY:
+            cv2.imshow("In range", inp)
+    # Change RETER_EXTERNAL to RETER_TREE if you are getting spotty detection
+    time_it("contours")
+    contours = cv2.findContours(inp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[1]
+    time_it("contours", False)
+    if not PIPELINE:
+        if DISPLAY:
+            cv2.drawContours(img_org, contours, -1, (255, 0, 0), 3)
+            cv2.imshow("Contours", img_org)
+    time_it("easy")
+    easy_contours = []
+    for cnt in contours:
+        if len(cnt) > 5:
+            easy_contours.append(EasyContour(cnt))
+    time_it("easy", False)
+    return easy_contours
 
 
 def filtering_and_solving(inp):
