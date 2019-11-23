@@ -1,6 +1,6 @@
-import time
 import cv2
 import sys
+import time
 import math
 import numpy as np
 from EasyContour import EasyContour
@@ -14,6 +14,8 @@ PIPELINE = True
 CAMERA_ID = "camera1_feed.mp4"
 # This changes if it will display some debug windows
 DISPLAY = False
+# If this is true, it enables the time_it function
+TRACING = True
 RGB_BOUNDS = (np.array([0, 100, 0]), np.array([200, 255, 200]))
 MATRIX = None
 DISTORTION = None
@@ -24,6 +26,7 @@ if "--benchmark" in sys.argv:
     assert type(CAMERA_ID) is str
     DISPLAY = False
     PIPELINE = True
+    # TRACING = False
     loops = 10
 else:
     loops = 0
@@ -50,6 +53,8 @@ def time_it(name, starting=True):
     """
     # The function will measure the amount of time between the calls and record it.  Processes
     # will send it back to the main process which will report it.
+    if not TRACING:
+        return
     if starting:
         times_dict[name] = time.monotonic()
     else:

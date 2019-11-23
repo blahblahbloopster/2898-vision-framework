@@ -7,6 +7,8 @@ preview, but it does in the text editor area.-->
 ##### tl;dr:
 Too bad, read it anyways
 
+### Note: this documentation assumes some prior knowledge of python
+
 ##### Vocabulary in opencv and this document:
 **contour** - specially formatted list of points, precisely how it must be formatted depends on
 the use case (i.e. objectpoints for solvepnp has an x, y, and z dimension with 32 bit floating
@@ -28,7 +30,7 @@ np.array(list, dtype=np.datatype_goes_here)
 ```
 #### How this framework works:
 There is a multistage pipeline that has 4 stages: Getting the image, processing the image,
-and filtering/solving
+and filtering/solving.
 The reason for the pipeline is so that it can entirely utilize multiple CPU cores, very
 important when working on a pi.
 You just need to modify the last stage, filtering/solving.
@@ -44,7 +46,10 @@ Different systems have different CPUs, GPUs (can affect results when opencv is c
 for CUDA), and RAM.  Benchmarking it on your computer and optimizing there is a good idea,
 but make sure to check it on your target platform.
 
-**How to do that**:
+**How to Write the Code:**
+First, MAKE A COPY OF THIS PROJECT.
+Do not write your code in the framework project.  Make a new project and use git.  Commit often.
+
 Getting some test footage is relatively straightforward, just make a target and film it.
 However, it is very important to choose the right (or at least consistent) camera settings.
 Write them down!
